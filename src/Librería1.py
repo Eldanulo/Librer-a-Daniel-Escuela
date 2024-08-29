@@ -110,7 +110,7 @@ class ventana_sql(QMainWindow):
 	def insertar_usuario(self):
 		añandir_insercion = '''
 			INSERT INTO Usuario (nom_usuario, apell_usuario, prov_usuario, pob_usuario, tel_usuario, nac_usuario)
-			VALUES (%s, %s, %s, %s, %s, str_to_date(%s, '%m/%d/%y'))
+			VALUES (%s, %s, %s, %s, %s, str_to_date(%s, '%d/%m/%y'))
 		'''
 
 		nombre = self.layout_insertar_usuario.layout_inserciones.line_edit_nombre.text()
