@@ -18,12 +18,11 @@ columna_de_usuario = [
 
 def conectar_db():
 	mydb = mysql.connector.connect (
-		user = "ParaTodos",
-		passwd = "contraseña1234",
-		host = "192.168.0.9",
-		# host = "localhost",
-		database = "Librería",
-		ssl_disabled = True
+		user="root",
+		passwd="BDcontraseña1407",
+		host="localhost",
+		database="Librería",
+		ssl_disabled=True
 	)
 	cursor = mydb.cursor()
 	
@@ -37,12 +36,11 @@ def error_bd(e):
 	if e.errno == errorcode.ER_ACCESS_DENIED_ERROR:
 		error_message = "Usuario o contraseña incorrecto para la base de datos."
 	elif e.errno == errorcode.ER_BAD_DB_ERROR:
-		error_message = "Base de datos inexitente."
+		error_message = "Base de datos inexistente."
 	else:
 		error_message = f"Error al conectarse a la base de datos: {e}"
 	
 	return error_message
-
 
 class ventana_sql(QMainWindow):
 	def __init__(self):
@@ -88,14 +86,14 @@ class ventana_sql(QMainWindow):
 	
 	#######################################################################################
 
-	def cambiar_ventana_menu (self):
+	def cambiar_ventana_menu(self):
 		self.layout_sql.setCurrentIndex(0)
 
 	def cambiar_ventana_mostrar_usuario(self):
 		self.layout_sql.setCurrentIndex(1)
 
 	def cambiar_ventana_insertar_usuario(self):
-		self.layout_sql.setCurrentIndex(2)		
+		self.layout_sql.setCurrentIndex(2)        
 		
 	#################################################################
 	
@@ -108,31 +106,34 @@ class ventana_sql(QMainWindow):
 		self.layout_insertar_usuario.layout_inserciones.label_insertado.setHidden(True)
 
 	def insertar_usuario(self):
-		añandir_insercion = '''
+		añadir_insercion = '''
 			INSERT INTO Usuario (nom_usuario, apell_usuario, prov_usuario, pob_usuario, tel_usuario, nac_usuario)
-			VALUES (%s, %s, %s, %s, %s, str_to_date(%s, '%d/%m/%y'))
+			VALUES (%s, %s, %s, %s, %s, STR_TO_DATE(%s, '%d-%m-%Y'))
 		'''
 
 		nombre = self.layout_insertar_usuario.layout_inserciones.line_edit_nombre.text()
-		apellido =self.layout_insertar_usuario.layout_inserciones.line_edit_apellido.text()
+		apellido = self.layout_insertar_usuario.layout_inserciones.line_edit_apellido.text()
 		provincia = self.layout_insertar_usuario.layout_inserciones.line_edit_provincia.text()
 		distrito = self.layout_insertar_usuario.layout_inserciones.line_edit_distrito.text()
-		nacimiento = self.layout_insertar_usuario.layout_inserciones.line_edit_telefono.text()
-		fecha = self.layout_insertar_usuario.layout_inserciones.date_nacimiento.text()
+		telefono = self.layout_insertar_usuario.layout_inserciones.line_edit_telefono.text()
+
+		# Obtener la fecha en el formato adecuado desde QDateEdit
+		fecha_qdate = self.layout_insertar_usuario.layout_inserciones.date_nacimiento.date()
+		fecha = fecha_qdate.toString("dd-MM-yyyy")  # Formato dd-MM-yyyy
 
 		elementos = (
 			nombre,
 			apellido,
 			provincia,
 			distrito,
-			nacimiento,
+			telefono,
 			fecha
 		)
 
 		try:
 			mydb, cursor = conectar_db()
 
-			cursor.execute(añandir_insercion, elementos)
+			cursor.execute(añadir_insercion, elementos)
 			mydb.commit()
 
 			desconectar_db(mydb, cursor)
@@ -141,7 +142,7 @@ class ventana_sql(QMainWindow):
 			print(error_message)
 			self.layout_insertar_usuario.layout_inserciones.label_insertado.setText(error_message)
 
-		self.layout_insertar_usuario.layout_inserciones.label_insertado.setText("Usuario Incertado")
+		self.layout_insertar_usuario.layout_inserciones.label_insertado.setText("Usuario Insertado")
 		self.layout_insertar_usuario.layout_inserciones.label_insertado.setHidden(False)
 	
 	############################################################################################################
@@ -152,27 +153,25 @@ class ventana_sql(QMainWindow):
 		try:
 			mydb, cursor = conectar_db()
 
-			cursor.execute("select * from usuario;")
+			cursor.execute("SELECT * FROM usuario;")
 			usuarios = cursor.fetchall()
 
 			cursor.execute('''
-				SELECT	CAST(count(COLUMN_NAME) AS char)
-				FROM	INFORMATION_SCHEMA.COLUMNS
-				WHERE	table_name = 'usuario' AND
+				SELECT CAST(count(COLUMN_NAME) AS char)
+				FROM INFORMATION_SCHEMA.COLUMNS
+				WHERE table_name = 'usuario' AND
 				table_schema = 'librería'; 
 			''')
 			cantidad_columnas = cursor.fetchall()
-			tananno_columna = int(cantidad_columnas[0][0])
-			#cursor.reset()
+			tamaño_columna = int(cantidad_columnas[0][0])
 
-			self.layout_muestras.layout_registros.table_widget.setColumnCount(tananno_columna)
+			self.layout_muestras.layout_registros.table_widget.setColumnCount(tamaño_columna)
 
 			desconectar_db(mydb, cursor)
 		except mysql.connector.Error as e:
 			error_message = error_bd(e)
 			print(error_message)
 
-		numero_columna = 0
 		for numero_fila, fila_con_datos in enumerate(usuarios):
 			self.layout_muestras.layout_registros.table_widget.insertRow(numero_fila)
 			for numero_columna, data in enumerate(fila_con_datos):
